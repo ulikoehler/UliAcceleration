@@ -8,40 +8,40 @@ from numba import njit
 
 __all__ = ["sliding_window_rms", "sliding_window_rms_offsets"]
 
-def _sliding_window_chunkoffsets(data, chunksize, shiftsize):
-    if chunksize == 0:
+def _sliding_window_chunkoffsets(data, window_size, shift_size):
+    if window_size == 0:
         raise ValueError("Chunksize must not be zero")
-    elif shiftsize == 0:
+    elif shift_size == 0:
         raise ValueError("Shiftsize must not be zero")
-    return range(0, data.shape[0] - (chunksize - 1), shiftsize)
+    return range(0, data.shape[0] - (window_size - 1), shift_size)
 
-def sliding_window_rms(data, window=None, chunksize=500, shiftsize=1):
+def sliding_window_rms(data, window=None, window_size=500, shift_size=1):
     """
     Numba accelerated sliding-window RMS algorithm.
 
-    Takes array and takes [chunksize] chunks, shifting the window
-    by [shiftsize] to the right every time.
+    Takes array and takes [window_size] chunks, shifting the window
+    by [shift_size] to the right every time.
     The number of chunks is automatically capped so the last chunk
-    also has a length of [chunksize].
+    also has a length of [window_size].
 
     Parameters
     ----------
     data : numpy array
         The data array to process. Should be a 1D numpy array.
-    window : None or numpy array of size chunksize
+    window : None or numpy array of size window_size
         Optionally you can use a window function (like a blackman window)
         that is multiplied to each chunk. this allows to reduce effects of shifting
         the window into the data
     """
-    num_chunks = len(_sliding_window_chunkoffsets(data, chunksize, shiftsize))
+    num_chunks = len(_sliding_window_chunkoffsets(data, window_size, shift_size))
     if num_chunks == 0:
         return np.asarray([])
     if window is None:
-        return _numba_sliding_window_rms(data, num_chunks, chunksize, shiftsize)
+        return _numba_sliding_window_rms(data, num_chunks, window_size, shift_size)
     else:
-        return _numba_sliding_window_rms_with_window(data, num_chunks, window, chunksize, shiftsize)
+        return _numba_sliding_window_rms_with_window(data, num_chunks, window, window_size, shift_size)
 
-def sliding_window_rms_offsets(data, chunksize=500, shiftsize=1):
+def sliding_window_rms_offsets(data, window_size=500, shift_size=1):
     """
     Utility that can be used with sliding_window_rms.
     Provide the offsets that are used to generate each chunk.
@@ -55,13 +55,13 @@ def sliding_window_rms_offsets(data, chunksize=500, shiftsize=1):
     
     Pseudocode:
         offsets = sliding_window_rms_offsets(data, ...)
-        chunks[i] = data[offsets[i]:offsets[i] + chunksize]
+        chunks[i] = data[offsets[i]:offsets[i] + window_size]
     """
-    offsets = np.asarray(_sliding_window_chunkoffsets(data, chunksize, shiftsize))
+    offsets = np.asarray(_sliding_window_chunkoffsets(data, window_size, shift_size))
     return offsets 
 
 @njit
-def _numba_sliding_window_rms_with_window(data, nchunks, window, size, shiftsize):
+def _numba_sliding_window_rms_with_window(data, nchunks, window, size, shift_size):
     result = np.zeros(nchunks)
     # We want to apply the window on the squared array to avoid repeated squaring
     # Use (data * window)² = arr² * window²
@@ -70,17 +70,17 @@ def _numba_sliding_window_rms_with_window(data, nchunks, window, size, shiftsize
     square_arr = np.square(data)
     # Generate RMS value for every chunk
     for i in range(nchunks):
-        ofs = i * shiftsize
+        ofs = i * shift_size
         result[i] = np.sqrt(np.mean(square_arr[ofs:ofs + size] * window_squared))
     return result
 
 @njit
-def _numba_sliding_window_rms(data, nchunks, size, shiftsize):
+def _numba_sliding_window_rms(data, nchunks, size, shift_size):
     result = np.zeros(nchunks)
     # Square array once instead of every chunk!
     square_arr = np.square(data)
     # Generate RMS value for every chunk
     for i in range(nchunks):
-        ofs = i * shiftsize
+        ofs = i * shift_size
         result[i] = np.sqrt(np.mean(square_arr[ofs:ofs + size]))
     return result
