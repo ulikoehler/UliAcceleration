@@ -31,7 +31,12 @@ def sliding_window_rms(data, window=None, window_size=500, shift_size=1):
     window : None or numpy array of size window_size
         Optionally you can use a window function (like a blackman window)
         that is multiplied to each chunk. this allows to reduce effects of shifting
-        the window into the data
+        the window into the data.
+        Note that using a window makes the algorithm take ~2x as long
+    window_size : int
+        The size of the sliding window
+    shift_size : int
+        The number of samples the window is shifted to the right for each iteration
     """
     num_chunks = len(_sliding_window_chunkoffsets(data, window_size, shift_size))
     if num_chunks == 0:
