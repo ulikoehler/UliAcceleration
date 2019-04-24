@@ -26,6 +26,34 @@ class TestSlidingWindow(object):
         assert_allclose(_offsets([1, 2, 3, 4, 5, 6], window_size=1, shift_size=1), [0, 1, 2, 3, 4, 5])
 
 
+class TestSlidingWindowIntegral(object):
+    def testIntegral(self):
+        # Empty array
+        assert_allclose(sliding_window_integral(np.asarray([])), [])
+        # Array too smal
+        assert_allclose(sliding_window_integral(np.asarray([1.0]), window_size=500), [])
+        # Array size == window_size
+        data = np.asarray([1.0, 2.0, 3.0])
+        assert_allclose(sliding_window_integral(data, window_size=data.size), np.sum(data))
+
+    def testIntegralOnRandomData(self):
+        data = np.random.random(10000)
+        # Compare with much slower UliEngineering functions
+        assert_allclose(sliding_window_integral(data, window_size=500, shift_size=1),
+            sliding_window(data, window_size=500, shift_size=1).apply(np.sum))
+        assert_allclose(sliding_window_integral(data, window_size=507, shift_size=18),
+            sliding_window(data, window_size=507, shift_size=18).apply(np.sum))
+
+    def testIntegralOnRandomDataWithWindow(self):
+        data = np.random.random(10000)
+        # Compare with much slower UliEngineering functions
+        window = np.blackman(500)
+        assert_allclose(sliding_window_integral(data, window_size=500, window=window, shift_size=1),
+            sliding_window(data, window_size=500, shift_size=1, window_func=WindowFunctor(500, "blackman")).apply(np.sum))
+        window = np.blackman(507)
+        assert_allclose(sliding_window_integral(data, window_size=507, shift_size=18, window=window),
+            sliding_window(data, window_size=507, shift_size=18, window_func=WindowFunctor(507, "blackman")).apply(np.sum))
+
 class TestSlidingWindowRMS(object):
     def testRMS(self):
         # Empty array
