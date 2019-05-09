@@ -54,6 +54,38 @@ class TestSlidingWindowIntegral(object):
         assert_allclose(sliding_window_integral(data, window_size=507, shift_size=18, window=window),
             sliding_window(data, window_size=507, shift_size=18, window_func=WindowFunctor(507, "blackman")).apply(np.sum))
 
+
+class TestSlidingWindowAverage(object):
+    def testAverage(self):
+        # Empty array
+        assert_allclose(sliding_window_average(np.asarray([])), [])
+        # Array too smal
+        assert_allclose(sliding_window_average(np.asarray([1.0]), window_size=500), [])
+        # Array size == window_size
+        data = np.asarray([1.0, 2.0, 3.0])
+        assert_allclose(sliding_window_average(data, window_size=data.size), np.average(data))
+
+    def testAverageOnRandomData(self):
+        data = np.random.random(10000)
+        # Compare with much slower UliEngineering functions
+        assert_allclose(sliding_window_average(data, window_size=500, shift_size=1),
+            sliding_window(data, window_size=500, shift_size=1).apply(np.average))
+        assert_allclose(sliding_window_average(data, window_size=507, shift_size=18),
+            sliding_window(data, window_size=507, shift_size=18).apply(np.average))
+
+    """def testAverageOnRandomDataWithWeights(self):
+        data = np.random.random(10000)
+        # Compare with much slower UliEngineering functions
+        window = np.blackman(500)
+        assert_allclose(sliding_window_average(data, window_size=500, weights=window, shift_size=1),
+            sliding_window(data, window_size=500, shift_size=1, window_func=WindowFunctor(500, "blackman")).apply(np.average))
+        window = np.blackman(507)
+        winfunc = WindowFunctor(507, "blackman")
+        avg = lambda arr: np.average(arr, weights=winfunc())
+        assert_allclose(sliding_window_average(data, window_size=507, shift_size=18, weights=window),
+            sliding_window(data, window_size=507, shift_size=18).apply(avg))"""
+
+
 class TestSlidingWindowRMS(object):
     def testRMS(self):
         # Empty array
