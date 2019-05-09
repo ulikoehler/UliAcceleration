@@ -155,7 +155,7 @@ def _numba_sliding_window_rms(data, nchunks, size, shift_size):
         result[i] = np.sqrt(np.mean(square_arr[ofs:ofs + size]))
     return result
 
-@njit
+@njit(nogil=True)
 def _numba_sliding_window_average(data, nchunks, size, shift_size):
     result = np.zeros(nchunks)
     # Generate average value for every chunk
@@ -164,7 +164,7 @@ def _numba_sliding_window_average(data, nchunks, size, shift_size):
         result[i] = np.mean(data[ofs:ofs + size])
     return result
 
-@njit
+@njit(nogil=True)
 def _numba_sliding_window_average_with_weights(data, nchunks, window, size, shift_size):
     result = np.zeros(nchunks)
     # Generate integral value for every chunk
@@ -173,7 +173,7 @@ def _numba_sliding_window_average_with_weights(data, nchunks, window, size, shif
         result[i] = np.average(data[ofs:ofs + size], weights=window)
     return result
 
-@njit
+@njit(nogil=True)
 def _numba_sliding_window_integral_with_window(data, nchunks, window, size, shift_size):
     result = np.zeros(nchunks)
     # Generate integral value for every chunk
@@ -182,7 +182,7 @@ def _numba_sliding_window_integral_with_window(data, nchunks, window, size, shif
         result[i] = np.sum(data[ofs:ofs + size] * window)
     return result
 
-@njit
+@njit(nogil=True)
 def _numba_sliding_window_integral(data, nchunks, size, shift_size):
     result = np.zeros(nchunks)
     # Generate integral value for every chunk
