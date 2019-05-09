@@ -73,17 +73,18 @@ class TestSlidingWindowAverage(object):
         assert_allclose(sliding_window_average(data, window_size=507, shift_size=18),
             sliding_window(data, window_size=507, shift_size=18).apply(np.average))
 
-    """def testAverageOnRandomDataWithWeights(self):
+    def testAverageOnRandomDataWithWeights(self):
         data = np.random.random(10000)
         # Compare with much slower UliEngineering functions
         window = np.blackman(500)
+        avg = lambda arr: np.average(arr, weights=window)
         assert_allclose(sliding_window_average(data, window_size=500, weights=window, shift_size=1),
-            sliding_window(data, window_size=500, shift_size=1, window_func=WindowFunctor(500, "blackman")).apply(np.average))
+            sliding_window(data, window_size=500, shift_size=1).apply(avg))
+        #
         window = np.blackman(507)
-        winfunc = WindowFunctor(507, "blackman")
-        avg = lambda arr: np.average(arr, weights=winfunc())
+        avg = lambda arr: np.average(arr, weights=window)
         assert_allclose(sliding_window_average(data, window_size=507, shift_size=18, weights=window),
-            sliding_window(data, window_size=507, shift_size=18).apply(avg))"""
+            sliding_window(data, window_size=507, shift_size=18).apply(avg))
 
 
 class TestSlidingWindowRMS(object):

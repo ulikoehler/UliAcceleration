@@ -107,8 +107,7 @@ def sliding_window_average(data, weights=None, window_size=500, shift_size=1):
     if weights is None:
         return _numba_sliding_window_average(data, num_chunks, window_size, shift_size)
     else:
-        raise ValueError("Weighted average is currently unsupported")
-        #return _numba_sliding_window_average_with_weights(data, num_chunks, weights, window_size, shift_size)
+        return _numba_sliding_window_average_with_weights(data, num_chunks, weights, window_size, shift_size)
 
 
 def sliding_window_offsets(data, window_size=500, shift_size=1):
@@ -158,20 +157,23 @@ def _numba_sliding_window_rms(data, nchunks, size, shift_size):
 @njit(nogil=True)
 def _numba_sliding_window_average(data, nchunks, size, shift_size):
     result = np.zeros(nchunks)
-    # Generate average value for every chunk
+    # Generate sum value for every chunk
+    # This is expected to be faster than np.mean()
     for i in range(nchunks):
         ofs = i * shift_size
-        result[i] = np.mean(data[ofs:ofs + size])
-    return result
+        result[i] = np.sum(data[ofs:ofs + size])
+    # We now compute the mean from the average
+    return result / size
 
 @njit(nogil=True)
 def _numba_sliding_window_average_with_weights(data, nchunks, window, size, shift_size):
     result = np.zeros(nchunks)
-    # Generate integral value for every chunk
+    # Generate windowed sum for every chunk
     for i in range(nchunks):
         ofs = i * shift_size
-        result[i] = np.average(data[ofs:ofs + size], weights=window)
-    return result
+        result[i] = np.sum(data[ofs:ofs + size] * window)
+    # Compute weighted mean from average
+    return result / np.sum(window)
 
 @njit(nogil=True)
 def _numba_sliding_window_integral_with_window(data, nchunks, window, size, shift_size):
