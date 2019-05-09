@@ -114,4 +114,3 @@ class TestSlidingWindowRMS(object):
         window = np.blackman(507)
         assert_allclose(sliding_window_rms(data, window_size=507, shift_size=18, window=window),
             sliding_window(data, window_size=507, shift_size=18, window_func=WindowFunctor(507, "blackman")).apply(rms))
-        
